@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Dayvid-William/API_Node_Curso/issues"
   },
-  "homepage": "https://github.com/Dayvid-William/API_Node_Curso#readme"
+  "homepage": "https://github.com/Dayvid-William/API_Node_Curso#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
 }
