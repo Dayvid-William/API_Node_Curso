@@ -99,6 +99,26 @@ if (request.method == 'POST' && request.url.startsWith('/todos')) {
   return
 }
 
+// GET /todos/:id
+if (request.method == 'GET' && /^\/todos\/\d+$/.test(request.url)) {
+  const [,, idRaw] = request.url.split('/')
+  const id = parseInt(idRaw)
+
+  todosDatabase
+    .get(id)
+    .then(todo => {
+      if (!todo) {
+        response.writeHead(400, JsonHeader)
+        response.end( {message: 'Resource not found' })
+      }else {
+        response.writeHead(200, JsonHeader)
+        response.end(todo)
+      }
+    })
+
+    return
+}
+
 // GET /todos
 if (request.method == 'GET' && request.url.startsWith('/todos')) {
   todosDatabase.list()
@@ -106,11 +126,45 @@ if (request.method == 'GET' && request.url.startsWith('/todos')) {
       response.writeHead(200, JsonHeader)
       response.end(JSON.stringify({ todos }))
     })
+
     return
 }
-// GET /todos/:id
+
 // DELETE /todos/:id
-// PUT /todos/:id
+if (request.method == 'DELETE' && /^\/todos\/\d+$/.test(request.url)) {
+  const [,, idRaw] = request.url.split('/')
+  const id = parseInt(idRaw)
+
+  todosDatabase
+    .del(id)
+    .then(() => {
+      response.writeHead(204)
+      response.end()
+    })
+
+  return
+}
+
+// PUT /todos/:id { "title":, "text": }
+if (request.method === 'PUT' && /^\/todos\/\d+$/.test(request.url)) {
+  let bodyRaw = ''
+  const [,, idRaw] = request.url.split('/')
+  const id = parseInt(idRaw)
+
+  request.on('data', data => bodyRaw += data)
+
+  request.once('end', () => {
+    const todo = { ...JSON.parse(bodyRaw), id }
+
+    todosDatabase.update(todo)
+      .then(updated => {
+        response.writeHead(200, JsonHeader)
+        response.end(JSON.stringify(updated))
+      })
+  })
+
+  return
+}
 
 
 
