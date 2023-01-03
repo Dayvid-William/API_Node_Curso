@@ -1,88 +1,30 @@
-const { application } = require('express')
 const express = require('express')
-const { TodosRepository } = require('./todos/repository')
+
+const hello = require('./hello/routes')
+const todos = require('./todos/routes')
+const users = require('./users/routes')
+
+const logger = require('./middlewares/logger')
+const errorHandler = require('./middlewares/error')
 
 const app = express()
-app.use(express.json())
+const router = express.Router()
 
-//GET hello
-app.get('/hello', (req, res) => {
-  res.status(200).send('Hello World!\n')
-})
+router.use(express.json())
+router.use(logger())
+router.use('/hello', hello)
+router.use('/todos', todos)
+router.use('/users', users)
 
-//GET /hello/:name
-app.get('/hello/:name', (req, res) => {
-  const name = req.params.name
-  res.status(200).send(`Hello ${name}!\n`)
-})
+router.use(errorHandler())
 
-// ** Todos **
+app.use('/api', router)
 
-const todosRepository = TodosRepository()
-
-const NotFound = {
-  error: 'Not found',
-  message: 'Resource not found',
-}
-
-// GET /todos/:id
-app.get('/todos/:id', async (req , res) => {
-  const id = parseInt(req.params.id)
-  const todo = await todosRepository.get(id)
-  if (!todo) {
-    res.status(404).send(NotFound)
-    return
-  }else
-  res.status(200).send(todo)
-})
-
-//Post /todos
-app.post('/todos', async (req, res) => {
-  const todo = req.body
-  const inserted = await todosRepository.insert(todo)
-    res
-      .status(201)
-      .header('location', `/todos/${inserted.id}`)
-      .send(inserted)
-})
-
-// PUT /todos/:id
-app.put('todos/:id', async (req, res) => {
-  const id = parseInt(req.params.id)
-  const todo = { ...req.body, id }
-
-  const found = await todosRepository.get(id)
-  if(!found){
-    res.status(404).send(NotFound)
-    return
-  }
-  const updated = await todosRepository.update(todo)
-  res.status(200).send(updated)
-})
-
-//DELETE /todos/:id
-app.delete('todos/:id', async (req, res) => {
-  const id = parseInt(req.params.id)
-  const found = await todosRepository.get(id)
-  if(!found){
-    res.status(404).send(NotFound)
-    return
-  }
-  await todosRepository.del(id)
-  res.status(204).send()
-})
-
-//GET /todos
-app.get('/todos', (_req, res) => {
-  todosRepository
-    .list()
-    .then(todos => res.status(200).send({ todos }))
-})
-
-app.listen(3000, '0.0.0.0', () => {
-  console.log('Server started')
-})
-  .once('error',  () => {
+app
+  .listen(3000, '0.0.0.0', () => {
+    console.log('Server started')
+  })
+  .once('error', (error) => {
     console.error(error)
     process.exit(1)
   })
